@@ -16,5 +16,12 @@ impl Opp {
         }
         b
     }
-
+    
+    pub fn in_mul(a: &Vec<f64>,b: &Vec<f64>) -> f64 {
+        let mut c: f64 = 0.;
+        for i in 0..a.len() {
+            c += a[i]*b[i];
+        }
+        c
+    }
 }
