@@ -8,4 +8,13 @@ impl Opp {
         }
         c
     }
+    
+    pub fn scl_mul(k: &f64,a: &Vec<f64>) -> Vec<f64> {
+        let mut b: Vec<f64> = Vec::new();
+        for i in a {
+            b.push(k * i);
+        }
+        b
+    }
+
 }
