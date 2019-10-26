@@ -24,4 +24,17 @@ impl Opp {
         }
         c
     }
+    //いったん平面ベクトルのみに限って、外積はスカラーを返すようにします
+    pub fn out_mul(a: &Vec<f64>,b: &Vec<f64>) -> f64 {
+        let mut c: f64 = 0.;
+        for i in 0..a.len() {
+            if i%2 == 0 {
+                c += a[i] * b[a.len() - 1 - i];
+        
+            } else {
+                c -= a[i] * b[a.len() - 1 - i]; 
+            }
+        }
+        c
+    }
 }
