@@ -45,4 +45,14 @@ impl Opp {
         }
         b.sqrt()
     }
+
+    pub fn sin_bt_vec(a: &Vec<f64>,b: &Vec<f64>) -> f64 {
+        let c: f64 = Opp::out_mul(&a,&b) / ( Opp::size(&a) * Opp::size(&b) );
+        c
+    }
+
+    pub fn cos_bt_vec(a: &Vec<f64>,b: &Vec<f64>) -> f64 {
+        let c: f64 = Opp::in_mul(&a,&b) / ( Opp::size(&a) * Opp::size(&b) );
+        c
+    }
 }
