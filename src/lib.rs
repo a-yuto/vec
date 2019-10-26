@@ -37,4 +37,12 @@ impl Opp {
         }
         c
     }
+
+    pub fn size(a: &Vec<f64>) -> f64 {
+        let mut b: f64 = 0.;
+        for i in a {
+            b += i*i;
+        }
+        b.sqrt()
+    }
 }
