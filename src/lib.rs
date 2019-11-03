@@ -105,7 +105,29 @@ impl MatOpp {
         b
     }
     
+    pub fn mul(a: &Vec<Vec<f64>>,b: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+        let  _a_row:         usize = a[0].len();
+        let  _a_col:         usize = a.len();
+        let  _b_row:         usize = b[0].len();
+        let  _b_col:         usize = b.len();
+        let mut c: Vec<Vec<f64>> = vec![vec![0.0;_b_row];_a_col];
+        for i in 0.._a_col {
+            for j in 0.._b_row {
+                for k in 0.._a_row {
+                    c[i][j] += a[i][k]*b[k][j];
+                }   
+            }   
+        }   
+        c   
+    }   
+
 }
+
+
+
+
+//----------------------------ここからテストです---------------------------
+
 
 #[cfg(test)]
 mod vec_tests {
@@ -195,6 +217,35 @@ mod mat_tests {
         ];
         let _k = 2.5;
         assert_eq!(_b,MatOpp::scl_mul(&_k,&_a));
+    }
+    #[test]
+    pub fn mul_works() {
+        let _a = vec![vec![1.0,2.0],
+                      vec![3.0,4.0]
+        ];
+        let _b = vec![vec![2.5,5.0],
+                      vec![7.5,10.0]
+        ];
+        let _c = vec![vec![17.5,25.0],
+                      vec![37.5,55.0]
+        ];
+        assert_eq!(_c, MatOpp::mul(&_a,&_b));
+
+        let _d = vec![vec![ 1.0, 2.0, 4.0, 5.0, 1.0],
+                      vec![ 0.0, 2.0, 1.0, 1.0, 3.0],
+                      vec![ 3.0, 0.0, 2.0, 0.0, 1.0]
+        ];
+        let _e = vec![vec![-1.0, 2.0],
+                      vec![ 0.0, 3.0],
+                      vec![ 1.0,-2.0],
+                      vec![-1.0, 1.0],
+                      vec![ 2.0,-3.0]
+        ];
+        let _f = vec![vec![ 0.0, 2.0],
+                      vec![ 6.0,-4.0],
+                      vec![ 1.0,-1.0]
+        ];
+        assert_eq!(_f, MatOpp::mul(&_d,&_e));
     }
 }
 
