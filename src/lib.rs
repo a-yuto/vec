@@ -153,7 +153,20 @@ impl MatOpp {
         }   
         c   
     }   
-
+    pub fn trans(a: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+       let col = a.len();
+       let row = a[0].len();
+       println!("col = {}",col);
+       println!("row = {}",row);
+       let mut b: Vec<Vec<f64>>  = vec![vec![0.0;col];row];
+       println!("b = {:?}",b);
+       for i in 0..row {
+           for j in 0..col {
+               b[i][j] = a[j][i];
+           }
+       }
+       b
+    }
 }
 
 
@@ -308,6 +321,17 @@ mod mat_tests {
                       vec![ 1.0,-1.0]
         ];
         assert_eq!(_f, MatOpp::mul(&_d,&_e));
+    }
+    #[test]
+    pub fn trans_works(){
+        let _a = vec![vec![ 1.0, 3.0,-2.0],
+                      vec![ 4.0, 5.0, 2.0]
+        ];
+        let _b = vec![vec![ 1.0, 4.0],
+                      vec![ 3.0, 5.0],
+                      vec![-2.0, 2.0]
+        ];
+        assert_eq!(_b,MatOpp::trans(&_a));
     }
 }
 
