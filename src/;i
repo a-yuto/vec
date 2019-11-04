@@ -237,19 +237,11 @@ mod vec_tests {
         let a = vec![71.0,80.0,89.0];
         assert_nearly_eq!((54.0 as f64).sqrt(),VecOpp::var(&a));
     }
-    #[test]
-    fn cov_works() {
-        let x: Vec<f64> = vec![50.0,60.0,70.0,80.0, 90.0];
-        let y: Vec<f64> = vec![40.0,70.0,90.0,60.0,100.0];
-        let z           = 220.0;
-        assert_nearly_eq!(&z,VecOpp::cov(&x,&y));
+    fn col_works() {
+    
     }
-    #[test]
-    fn cor_works() {
-        let x: Vec<f64> = vec![50.0,60.0,70.0,80.0, 90.0];
-        let y: Vec<f64> = vec![40.0,70.0,90.0,60.0,100.0];
-        let z           = 0.728492796385774;
-        assert_nearly_eq!(&z,VecOpp::cor(&x,&y));
+    fn cov_works() {
+
     }
 }
 
