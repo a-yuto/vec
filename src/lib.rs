@@ -2,6 +2,7 @@ pub struct VecOpp;
 pub struct MatOpp;
 extern crate nearly_eq;
 use nearly_eq::*;
+
 impl VecOpp {
     pub fn add(a: &Vec<f64>,b: &Vec<f64>) -> Result<Vec<f64>,String>{
         let mut c: Vec<f64> = Vec::new();
@@ -124,11 +125,21 @@ impl VecOpp {
 
 
 impl MatOpp {
-    pub fn add(a: &Vec<Vec<f64>>,b: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
-        let _c = vec![VecOpp::add(&a[0],&b[0]).unwrap(),
-                      VecOpp::add(&a[1],&b[1]).unwrap()
-        ];
-        _c
+    pub fn add(a: &Vec<Vec<f64>>,b: &Vec<Vec<f64>>) -> Result<Vec<Vec<f64>>,String> {
+        let _can = ( a.len() == b.len() ) && ( a[0].len() == b[0].len() );
+        let mut _c = vec![vec![0.0;a[0].len()];a.len()];
+        if _can {
+            for i in 0..a.len() {
+                for j in 0..a[0].len() {
+                    _c[i][j] = a[i][j] + b[i][j];
+                }
+            }
+        }
+        let d:Result<Vec<Vec<f64>>,String> = match _can { 
+            true  => Ok(_c),
+            false => Err("計算不可能です".to_string()),
+        };
+        d
     }
     pub fn scl_mul(k: &f64,a: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
         let mut b: Vec<Vec<f64>> = Vec::new();
@@ -156,10 +167,7 @@ impl MatOpp {
     pub fn trans(a: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
        let col = a.len();
        let row = a[0].len();
-       println!("col = {}",col);
-       println!("row = {}",row);
        let mut b: Vec<Vec<f64>>  = vec![vec![0.0;col];row];
-       println!("b = {:?}",b);
        for i in 0..row {
            for j in 0..col {
                b[i][j] = a[j][i];
@@ -167,8 +175,19 @@ impl MatOpp {
        }
        b
     }
-}
+    //n = nに限定してLU分解で解く
+    pub fn rev(a: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
+        let l = vec![vec![             1.0,                              0.0  ],
+                     vec![ a[1][0]/a[0][0],                              1.0  ]
+        ];
+        let u = vec![vec![         a[0][0],                           a[0][1] ],
+                     vec![             0.0, a[1][1] - a[1][0]*a[0][1]/a[0][0] ]
+        ];
 
+        let mut b: Vec<Vec<f64>> = vec![vec![0.0;a.len()];a.len()];
+        b  
+    }
+}
 
 
 
@@ -280,7 +299,19 @@ mod mat_tests {
         let _c = vec![vec![0.0,2.0],
                       vec![3.0,3.0]
         ];
-        assert_eq!(_a,MatOpp::add(&_b,&_c));
+        assert_eq!(_a,MatOpp::add(&_b,&_c).unwrap());
+
+        let _d = vec![vec![ 1.0,-2.0, 8.0],
+                      vec![ 2.0, 5.0,-1.0]
+        ];
+        let _e = vec![vec![-2.0, 5.0, 1.0],
+                      vec![ 3.0,-1.0, 2.0]
+        ];
+        let _f = vec![vec![-1.0, 3.0, 9.0],
+                      vec![ 5.0, 4.0, 1.0]
+        ];
+
+        assert_eq!(_f,MatOpp::add(&_d,&_e).unwrap());
     }
     #[test]
     pub fn scl_mul_works() {
@@ -332,6 +363,17 @@ mod mat_tests {
                       vec![-2.0, 2.0]
         ];
         assert_eq!(_b,MatOpp::trans(&_a));
+    }
+    //#[test]
+    pub fn rev_works() {
+        let _a = vec![vec![ 3.0, 1.0],
+                      vec![ 5.0, 1.0]
+        ];
+        let _b = vec![vec![-0.5, 0.5],
+                      vec![ 2.5,-1.5]
+        ];
+        println!("{:?}",MatOpp::mul(&_a,&_b));
+        assert_eq!(&_b,&MatOpp::rev(&_a));
     }
 }
 
