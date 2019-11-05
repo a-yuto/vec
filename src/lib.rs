@@ -300,6 +300,18 @@ mod mat_tests {
                       vec![3.0,3.0]
         ];
         assert_eq!(_a,MatOpp::add(&_b,&_c).unwrap());
+
+        let _d = vec![vec![ 1.0,-2.0, 8.0],
+                      vec![ 2.0, 5.0,-1.0]
+        ];
+        let _e = vec![vec![-2.0, 5.0, 1.0],
+                      vec![ 3.0,-1.0, 2.0]
+        ];
+        let _f = vec![vec![-1.0, 3.0, 9.0],
+                      vec![ 5.0, 4.0, 1.0]
+        ];
+
+        assert_eq!(_f,MatOpp::add(&_d,&_e).unwrap());
     }
     #[test]
     pub fn scl_mul_works() {
