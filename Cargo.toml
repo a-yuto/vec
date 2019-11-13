@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 nearly_eq = "0.2.4"
+matrix    = "0.22.0" 

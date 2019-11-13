@@ -1,5 +1,6 @@
+#[macro_use]
 pub struct VecOpp;
-pub struct MatOpp;
+extern crate matrix;
 extern crate nearly_eq;
 use nearly_eq::*;
 
@@ -123,20 +124,33 @@ impl VecOpp {
      }
 }
 
+struct Matrix {
+    mat: Vec<Vec<f64>>,
+    row: usize,
+    col: usize
+}
 
-impl MatOpp {
-    pub fn add(a: &Vec<Vec<f64>>,b: &Vec<Vec<f64>>) -> Result<Vec<Vec<f64>>,String> {
-        let _can = ( a.len() == b.len() ) && ( a[0].len() == b[0].len() );
-        let mut _c = vec![vec![0.0;a[0].len()];a.len()];
-        if _can {
-            for i in 0..a.len() {
-                for j in 0..a[0].len() {
-                    _c[i][j] = a[i][j] + b[i][j];
-                }
+impl Matrix {
+
+    pub fn is_same_size(a: &Matrix,b: &Matrix) -> bool {
+        ( a.row == b.row ) && ( a.col == b.col )
+    } 
+    
+    pub fn add(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+        let mut _c = vec![vec![0.0;a.row];a.col];
+        for i in 0..a.col {
+            for j in 0..a.row {
+                _c[i][j] = a.mat[i][j] + b.mat[i][j];
             }
         }
-        let d:Result<Vec<Vec<f64>>,String> = match _can { 
-            true  => Ok(_c),
+        let d:Result<Matrix,String> = match Matrix::is_same_size(&a,&b) { 
+            true  => Ok(
+                    Matrix {
+                        mat: _c,
+                        row: a.row,
+                        col: a.col
+                    }
+                ),
             false => Err("計算不可能です".to_string()),
         };
         d
@@ -287,32 +301,78 @@ mod vec_tests {
 
 mod mat_tests {
     use super::*;
-
+    #[test]
+    pub fn same_size_works() {
+        let _a = Matrix{
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            row: 2,
+            col: 2
+        };
+        let _b = Matrix{
+            mat: vec![vec![1.0,0.0],
+                      vec![0.0,1.0]],
+            row: 2,
+            col: 2
+        };
+        let _c = Matrix{
+            mat: vec![vec![0.0,2.0,2.0],
+                      vec![3.0,3.0,5.0]],
+            row: 3,
+            col: 2,
+        };
+        assert!(Matrix::is_same_size(&_a,&_b));
+        assert!(!Matrix::is_same_size(&_b,&_c));
+    }
     #[test]
     pub fn add_works() {
-        let _a = vec![vec![1.0,2.0],
-                      vec![3.0,4.0]
-        ];
-        let _b = vec![vec![1.0,0.0],
-                      vec![0.0,1.0]
-        ];
-        let _c = vec![vec![0.0,2.0],
-                      vec![3.0,3.0]
-        ];
-        assert_eq!(_a,MatOpp::add(&_b,&_c).unwrap());
+        let _a = Matrix{
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            row: 2,
+            col: 2
+        };
+        let _b = Matrix{
+            mat: vec![vec![1.0,0.0],
+                      vec![0.0,1.0]],
+            row: 2,
+            col: 2
+        };
+        let _c = Matrix{
+            mat: vec![vec![0.0,2.0],
+                      vec![3.0,3.0]],
+            row: 2,
+            col: 2,
+        };
+        let _d = Matrix::add(&_b,&_c).unwrap();
+        assert_eq!(_a.mat,_d.mat);
+        assert_eq!(_a.row,_d.row);
+        assert_eq!(_a.col,_d.col);
 
-        let _d = vec![vec![ 1.0,-2.0, 8.0],
-                      vec![ 2.0, 5.0,-1.0]
-        ];
-        let _e = vec![vec![-2.0, 5.0, 1.0],
-                      vec![ 3.0,-1.0, 2.0]
-        ];
-        let _f = vec![vec![-1.0, 3.0, 9.0],
-                      vec![ 5.0, 4.0, 1.0]
-        ];
-
-        assert_eq!(_f,MatOpp::add(&_d,&_e).unwrap());
+        let _d = Matrix{
+            mat: vec![vec![ 1.0,-2.0, 8.0],
+                      vec![ 2.0, 5.0,-1.0]],
+            row: 3,
+            col: 2
+        };
+        let _e = Matrix{
+            mat: vec![vec![-2.0, 5.0, 1.0],
+                      vec![ 3.0,-1.0, 2.0]],
+            row: 3,
+            col: 2
+        };
+        let _f = Matrix{
+            mat: vec![vec![-1.0, 3.0, 9.0],
+                      vec![ 5.0, 4.0, 1.0]],
+            row: 3,
+            col: 2
+        };
+        let _g = Matrix::add(&_d,&_e).unwrap();
+        assert_eq!(_f.mat,_g.mat);
+        assert_eq!(_f.col,_g.col);
+        assert_eq!(_f.row,_g.row);
     }
+
     #[test]
     pub fn scl_mul_works() {
         let _a = vec![vec![1.0,2.0],
@@ -322,7 +382,7 @@ mod mat_tests {
                       vec![7.5,10.0]
         ];
         let _k = 2.5;
-        assert_eq!(_b,MatOpp::scl_mul(&_k,&_a));
+        assert_eq!(_b,Matrix::scl_mul(&_k,&_a));
     }
     #[test]
     pub fn mul_works() {
@@ -335,7 +395,7 @@ mod mat_tests {
         let _c = vec![vec![17.5,25.0],
                       vec![37.5,55.0]
         ];
-        assert_eq!(_c, MatOpp::mul(&_a,&_b));
+        assert_eq!(_c, Matrix::mul(&_a,&_b));
 
         let _d = vec![vec![ 1.0, 2.0, 4.0, 5.0, 1.0],
                       vec![ 0.0, 2.0, 1.0, 1.0, 3.0],
@@ -351,7 +411,7 @@ mod mat_tests {
                       vec![ 6.0,-4.0],
                       vec![ 1.0,-1.0]
         ];
-        assert_eq!(_f, MatOpp::mul(&_d,&_e));
+        assert_eq!(_f, Matrix::mul(&_d,&_e));
     }
     #[test]
     pub fn trans_works(){
@@ -362,7 +422,7 @@ mod mat_tests {
                       vec![ 3.0, 5.0],
                       vec![-2.0, 2.0]
         ];
-        assert_eq!(_b,MatOpp::trans(&_a));
+        assert_eq!(_b,Matrix::trans(&_a));
     }
     //#[test]
     pub fn rev_works() {
@@ -372,8 +432,8 @@ mod mat_tests {
         let _b = vec![vec![-0.5, 0.5],
                       vec![ 2.5,-1.5]
         ];
-        println!("{:?}",MatOpp::mul(&_a,&_b));
-        assert_eq!(&_b,&MatOpp::rev(&_a));
+        println!("{:?}",Matrix::mul(&_a,&_b));
+        assert_eq!(&_b,&Matrix::rev(&_a));
     }
 }
 
