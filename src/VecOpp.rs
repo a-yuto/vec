@@ -1,8 +1,6 @@
-#[macro_use]
+use nearly_eq::*;
 pub struct VecOpp;
 extern crate matrix;
-extern crate nearly_eq;
-use nearly_eq::*;
 
 pub fn add(a: &Vec<f64>,b: &Vec<f64>) -> Result<Vec<f64>,String>{
     let mut c: Vec<f64> = Vec::new();
