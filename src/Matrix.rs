@@ -293,10 +293,51 @@ pub fn inverse(mut a: &mut Matrix) -> Matrix{
     }
     inv_A
 }
+//2×2に限定
+pub fn strassen(a: &Matrix,b: &Matrix) -> Matrix {
+    if !((a.row == a.col) && (b.row == b.col) && (a.row == 2) ) {
+        panic!("条件外です。");
+    }
+    let p1 = (a.mat[0][0] +  a.mat[1][1]) * (b.mat[0][0] + b.mat[1][1]);
+    let p2 = (a.mat[1][0] +  a.mat[1][1]) *  b.mat[0][0];
+    let p3 =  a.mat[0][0] * (b.mat[0][1]  -  b.mat[1][1]);
+    let p4 =  a.mat[1][1] * (b.mat[1][0]  -  b.mat[0][0]);
+    let p5 = (a.mat[0][0] +  a.mat[0][1]) *  b.mat[1][1];
+    let p6 = (a.mat[1][0] -  a.mat[0][0]) * (b.mat[0][0] + b.mat[0][1]);
+    let p7 = (a.mat[0][1] -  a.mat[1][1]) * (b.mat[1][0] + b.mat[1][1]);
+
+    let c11 = p1 + p4 - p5 + p7;
+    let c12 = p3 + p5;
+    let c21 = p2 + p4;
+    let c22 = p1 + p3 - p2 + p6;
+    Matrix{
+        mat:vec![vec![c11,c12],
+                 vec![c21,c22]],
+        col: 2,
+        row: 2,
+    }
+}
 //----------------------------ここからテストです---------------------------
 #[cfg(test)]
 mod mat_tests {
     use super::*;
+    #[test]
+    pub fn strassen_works(){
+        let a = Matrix{
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            col: 2,
+            row: 2
+        };
+        let b = Matrix{
+            mat: vec![vec![5.0,6.0],
+                      vec![7.0,8.0]],
+            col: 2,
+            row: 2
+        };
+        assert_eq!(mul(&a,&b).unwrap().mat,strassen(&a,&b).mat);
+
+    }
     //#[test]
     pub fn det_works() {
         let a = Matrix{
