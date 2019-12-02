@@ -7,24 +7,6 @@ pub struct Matrix {
     col: usize
 }
 
-pub fn delete_row(k: usize,a: &Matrix) -> Matrix{
-    let k: Matrix = zero(a.row,a.col - 1);
-    for i in 0..a.col {
-        if i == k {continue}
-        k[i] = a[i];
-    }
-    k
-}
-
-pub fn delete_col(k: usize,a: &Matrix) -> Matrix {
-    let k: Matrix = zero(a.row - 1,a.col);
-    for i in 0..a.col {
-        if i == k {continue}
-        for in 
-        k[i] = get_col(i,&a);
-    }
-    k
-}
 pub fn get_row(k: usize,a: &Matrix) -> Result<Matrix,String> {
     let b =  vec![a.mat[k - 1].clone();1];
     let r = b[0].len();
@@ -235,9 +217,9 @@ pub fn LU_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
 }
 pub fn LU(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
     let N = a.col;
-    let mut temp_l = zero(N,N);
-    let mut temp_u = iden(N);
-    let mut lu     = zero(N,N);
+    let temp_l = zero(N,N);
+    let temp_u = iden(N);
+    let lu     = zero(N,N);
 
     let (L,U) = LU_cal(0,N,temp_l,temp_u,lu,a);
     let l:Result<Matrix,String> = match a.col == a.row {
@@ -279,68 +261,72 @@ pub fn det_for_tri(a: &Matrix) -> Result<f64,String> {
     };
     Det
 }
-
-
-pub fn adj_for_tri(a: &Matrix) -> Matrix {
-    let n = a.row;
-    let mut b: Vec<Vec<f64>> = vec![vec![0.0;n];n];
-    for i in 0..n {
-        for j in 0..n {
-            
+pub fn reduct(a: &Matrix) -> Matrix {
+    let mut w = zero(a.col - 1,a.row - 1);
+    for row in 1..a.row {
+        for col in 1..a.col {
+            w.mat[col - 1][row - 1] = a.mat[col][row] - (a.mat[col][0] / a.mat[0][0]) * a.mat[0][row];
         }
-        b[i][i] = c;
     }
-    Matrix {
-        mat: b,
-        row: n,
-        col: n
-    }
+    w
 }
 
-pub fn rev_for_tri(a: &Matrix) -> Result<Matrix,String> {
-    let b = adj_for_tri(&a);
-    let c = 1.0 / det_for_tri(&a).unwrap();
-    let rev = scl_mul(&c,&b);
-    let Rev:Result<Matrix,String> = match is_tri(&a) {
-        true  => Ok(rev),
-        false => Err("三角行列ではありません".to_string()),
-    };
-    Rev
-}
-pub fn rev(a: &Matrix) -> Matrix {
-    let (l,u) = LU(&a);
-    let L     = l.unwrap();
-    let U     = u.unwrap();
-    let rev_l = rev_for_tri(&L);
-    let rev_u = rev_for_tri(&U);
-    mul(&rev_u.unwrap(),&rev_l.unwrap()).unwrap()
+pub fn inverse(mut a: &mut Matrix) -> Matrix{
+    let n = a.col;
+    let mut inv_A = iden(n);
+    let mut buf   = 0.0;
+    for i in 0..n {
+        buf = 1.0/a.mat[i][i];
+        for j in 0..n {
+            a.mat[i][j]     *= buf;
+            inv_A.mat[i][j] *= buf;
+        }
+        for j in 0..n {
+            if i != j {
+                buf = a.mat[j][i];
+            }
+            for k in 0..n {
+                a.mat[j][k]     -= a.mat[i][k]*buf;
+                inv_A.mat[j][k] -= inv_A.mat[i][k]*buf;
+            }
+        }
+    }
+    inv_A
 }
 //----------------------------ここからテストです---------------------------
 #[cfg(test)]
 mod mat_tests {
     use super::*;
+    //#[test]
+    pub fn det_works() {
+        let a = Matrix{
+            mat: vec![vec![1.0,2.0,3.0,4.0],
+                      vec![1.0,2.0,3.0,4.0],
+                      vec![1.0,2.0,3.0,4.0],
+                      vec![1.0,2.0,3.0,4.0]],
+            col: 4,
+            row: 4
+        };
+        let b = -160.0;
+    }
     #[test]
-    pub fn rev_for_tri_works() {
-        let test = Matrix {
-            mat: vec![vec![ 1.0, 2.0, 3.0, 4.0],
-                      vec![ 0.0, 1.0, 2.0, 3.0],
-                      vec![ 0.0, 0.0, 1.0, 5.0],
-                      vec![ 0.0, 0.0, 0.0, 1.0]],
-            row: 4,
-            col: 4
+    pub fn reduct_test(){
+        let a = Matrix{
+            mat: vec![vec![4.0,3.0,2.0,1.0],
+                      vec![1.0,4.0,3.0,2.0],
+                      vec![2.0,1.0,4.0,3.0],
+                      vec![3.0,2.0,1.0,4.0]],
+            col: 4,
+            row: 4
         };
-        let ans = Matrix{
-            mat: vec![vec![ 1.0,-2.0, 1.0,-3.0],
-                      vec![ 0.0, 1.0,-2.0, 7.0],
-                      vec![ 0.0, 0.0, 1.0,-5.0],
-                      vec![ 0.0, 0.0, 0.0, 1.0]],
-            row: 4,
-            col: 4 
+        let b = Matrix{
+            mat: vec![vec![13.0/4.0,5.0/2.0,7.0/4.0],
+                      vec![-1.0/2.0,    3.0,5.0/2.0],
+                      vec![-1.0/4.0,-1.0/2.0,13.0/4.0]],
+            col: 3,
+            row: 3
         };
-        let test2 = rev_for_tri(&ans).unwrap();
-        assert_eq!(test.mat,test2.mat);
-        assert_eq!(test.col,test2.col);
-        assert_eq!(test.row,test2.row);
+        assert_eq!(reduct(&a).mat,b.mat);
     }
     #[test]
     pub fn get_row_works() {
@@ -593,21 +579,25 @@ mod mat_tests {
         assert_eq!(_b.col,_c.col);
         assert_eq!(_b.row,_c.row);
     }
-    #[test]
+    //#[test]
     pub fn rev_works() {
-        let _a = Matrix{
-            mat: vec![vec![ 3.0, 1.0],
-                      vec![ 5.0, 1.0]],
-            row: 2,
-            col: 2
+        let mut _a = Matrix{
+            mat: vec![vec![ 1.0, 1.0,-1.0],
+                      vec![-2.0, 0.0, 1.0],
+                      vec![ 0.0, 2.0, 1.0]
+            ],
+            row: 3,
+            col: 3
         };
         let _b = Matrix{
-            mat: vec![vec![-0.5, 0.5],
-                      vec![ 2.5,-1.5]],
-            row: 2,
-            col: 2
+            mat: vec![vec![-0.5,-0.75,0.25],
+                      vec![ 0.5, 0.25,0.25],
+                      vec![-1.0, -0.5, 0.5]
+            ],
+            row: 3,
+            col: 3
         };
-        let _c = rev(&_a);
+        let _c = inverse(&mut _a);
         assert_eq!(&_b.mat,&_c.mat);
         assert_eq!(&_b.col,&_c.col);
         assert_eq!(&_b.row,&_c.row);
@@ -722,26 +712,4 @@ mod mat_tests {
         };
         assert_eq!(a,det_for_tri(&y).unwrap());
     }
-    #[test]
-    pub fn adj_for_tri_works() {
-        let test = Matrix {
-            mat: vec![vec![ 1.0, 2.0, 3.0],
-                      vec![ 0.0, 1.0,-1.0],
-                      vec![ 0.0, 0.0, 5.0]],
-            row: 3,
-            col: 3
-        };
-        let ans = Matrix {
-            mat: vec![vec![ 5.0,-10.0,-5.0],
-                      vec![ 0.0, 5.0, 1.0],
-                      vec![ 0.0, 0.0, 1.0]],
-            row: 3,
-            col: 3
-        };
-        let _test = adj_for_tri(&test);
-        assert_eq!(_test.mat,ans.mat);
-        assert_eq!(_test.row,ans.row);
-        assert_eq!(_test.col,ans.col);
-    }
 }
-
