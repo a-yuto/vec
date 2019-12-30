@@ -190,6 +190,9 @@ pub fn LU_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
     }
 
     let mut u1: Vec<f64> = vec![0.0;n];
+    if l0 == 0.0 {
+        println!("occors zero division!!!!!!!!!");
+    }
     for j in 0..n {
         temp_u.mat[i][j + i + 1] = matA.mat[0][j + 1] / l0;
         u1[j]                    = matA.mat[0][j + 1] / l0;
@@ -215,6 +218,7 @@ pub fn LU_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
         LU_cal(i + 1,N,temp_l,temp_u,lu,&A1)
     }
 }
+
 pub fn LU(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
     let N = a.col;
     let temp_l = zero(N,N);
@@ -247,6 +251,12 @@ pub fn is_tri(a: &Matrix) -> bool {
         }
     }
     (right_up * left_down) == 0.0
+}
+pub fn mat_print(a: &Matrix) {
+    let aa = &a.mat;
+    for r in aa{
+        println!("{:?}",r);
+    }
 }
 
 pub fn det_for_tri(a: &Matrix) -> Result<f64,String> {
@@ -317,10 +327,76 @@ pub fn strassen(a: &Matrix,b: &Matrix) -> Matrix {
         row: 2,
     }
 }
+
+
+pub fn connect(a: &mut Matrix,b: &mut Matrix) -> Result<Matrix,String> {
+    let ok = a.row == b.row;
+    let mut matrix:Vec<Vec<f64>> = Vec::new();
+    for i in 0..a.col {
+        let mut left  = &mut a.mat[i];
+        let mut right = &mut b.mat[i];
+        left.append(&mut right);
+        matrix.push(left.to_vec());
+        println!("{:?}",matrix);
+    }
+
+    match ok {
+    true  => Ok(Matrix {
+            mat: matrix,
+            row: a.row + b.row,
+            col: a.col
+        }),
+    false => Err(
+        "結合できません".to_string()
+        )
+    }
+}
+
 //----------------------------ここからテストです---------------------------
 #[cfg(test)]
 mod mat_tests {
     use super::*;
+    #[test]
+    pub fn connect_works(){
+        let mut a: Matrix = Matrix {
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            row: 2,
+            col: 2
+        };
+        let b: Matrix = Matrix {
+            mat: vec![vec![1.0,2.0,1.0,0.0],
+                      vec![3.0,4.0,0.0,1.0]],
+            row: 4,
+            col: 2
+        };
+        let mut e = iden(2);
+        assert_eq!(connect(&mut a,&mut e).unwrap().mat,b.mat);
+        assert_eq!(connect(&mut a,&mut e).unwrap().row,b.row);
+        assert_eq!(connect(&mut a,&mut e).unwrap().col,b.col);
+    }
+
+    //#[test]
+    pub fn gauss_works(){
+        let a: Matrix = Matrix{
+            mat:vec![vec![ 3.0, 3.0,-5.0,-6.0],
+                     vec![ 1.0, 2.0,-3.0,-1.0],
+                     vec![ 2.0, 3.0,-5.0,-3.0],
+                     vec![-1.0, 0.0, 2.0, 2.0]],
+            row: 4,
+            col: 4,
+        };
+
+        let b: Matrix = Matrix {
+            mat:vec![vec![ 4.0,18.0,-16.0,-3.0],
+                     vec![ 0.0,-1.0,  1.0, 1.0],
+                     vec![ 1.0, 3.0, -3.0, 0.0],
+                     vec![ 1.0, 6.0, -5.0,-1.0]],
+            row: 4,
+            col: 4
+        };
+        //assert_eq!(gauss(&a).mat,b.mat);
+    }
     #[test]
     pub fn strassen_works(){
         let a = Matrix{
@@ -337,18 +413,6 @@ mod mat_tests {
         };
         assert_eq!(mul(&a,&b).unwrap().mat,strassen(&a,&b).mat);
 
-    }
-    //#[test]
-    pub fn det_works() {
-        let a = Matrix{
-            mat: vec![vec![1.0,2.0,3.0,4.0],
-                      vec![1.0,2.0,3.0,4.0],
-                      vec![1.0,2.0,3.0,4.0],
-                      vec![1.0,2.0,3.0,4.0]],
-            col: 4,
-            row: 4
-        };
-        let b = -160.0;
     }
     #[test]
     pub fn reduct_test(){
