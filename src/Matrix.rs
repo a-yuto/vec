@@ -353,6 +353,12 @@ pub fn connect(a: &mut Matrix,b: &mut Matrix) -> Result<Matrix,String> {
 }
 
 //----------------------------ここからテストです---------------------------
+pub fn matrix_test(a: &Matrix,b: &Matrix) {
+    assert_eq!(a.mat,b.mat);
+    assert_eq!(a.col,b.col);
+    assert_eq!(a.row,b.row);
+}
+
 #[cfg(test)]
 mod mat_tests {
     use super::*;
@@ -371,9 +377,7 @@ mod mat_tests {
             col: 2
         };
         let mut e = iden(2);
-        assert_eq!(connect(&mut a,&mut e).unwrap().mat,b.mat);
-        assert_eq!(connect(&mut a,&mut e).unwrap().row,b.row);
-        assert_eq!(connect(&mut a,&mut e).unwrap().col,b.col);
+        matrix_test(&connect(&mut a,&mut e).unwrap(),&b);
     }
 
     //#[test]
@@ -411,7 +415,7 @@ mod mat_tests {
             col: 2,
             row: 2
         };
-        assert_eq!(mul(&a,&b).unwrap().mat,strassen(&a,&b).mat);
+        matrix_test(&mul(&a,&b).unwrap(),&strassen(&a,&b));
 
     }
     #[test]
@@ -431,7 +435,7 @@ mod mat_tests {
             col: 3,
             row: 3
         };
-        assert_eq!(reduct(&a).mat,b.mat);
+        matrix_test(&reduct(&a),&b);
     }
     #[test]
     pub fn get_row_works() {
@@ -450,9 +454,7 @@ mod mat_tests {
             col: 1
         };
         let _c = get_row(2,&_a).unwrap();
-        assert_eq!(_c.mat,_b.mat);
-        assert_eq!(_c.row,_b.row);
-        assert_eq!(_c.col,_b.col);
+        matrix_test(&_c,&_b);
     }
     #[test]
     pub fn get_col_works() {
@@ -475,9 +477,7 @@ mod mat_tests {
             col: 5
         };
         let _c = get_col(2,&_a).unwrap();
-        assert_eq!(_c.mat,_b.mat);
-        assert_eq!(_c.row,_b.row);
-        assert_eq!(_c.col,_b.col);
+        matrix_test(&_c,&_b);
     }
     #[test]
     pub fn zero_works() {
@@ -490,9 +490,7 @@ mod mat_tests {
                   col: 3
 
         };
-        assert_eq!(test_generate.mat,ans_generate.mat);
-        assert_eq!(test_generate.row,ans_generate.col);
-        assert_eq!(test_generate.col,ans_generate.col);
+        matrix_test(&test_generate,&ans_generate);
     }
 
     #[test]
@@ -506,9 +504,7 @@ mod mat_tests {
             row: 4,
             col: 4
         };
-        assert_eq!(test.mat,ans.mat);
-        assert_eq!(test.row,ans.col);
-        assert_eq!(test.col,ans.col);
+        matrix_test(&test,&ans);
     }
     #[test]
     pub fn same_size_works() {
@@ -554,9 +550,7 @@ mod mat_tests {
             col: 2,
         };
         let _d = add(&_b,&_c).unwrap();
-        assert_eq!(_a.mat,_d.mat);
-        assert_eq!(_a.row,_d.row);
-        assert_eq!(_a.col,_d.col);
+        matrix_test(&_a,&_d);
 
         let _d = Matrix{
             mat: vec![vec![ 1.0,-2.0, 8.0],
@@ -577,9 +571,7 @@ mod mat_tests {
             col: 2
         };
         let _g = add(&_d,&_e).unwrap();
-        assert_eq!(_f.mat,_g.mat);
-        assert_eq!(_f.col,_g.col);
-        assert_eq!(_f.row,_g.row);
+        matrix_test(&_f,&_g);
     }
 
 
@@ -599,9 +591,7 @@ mod mat_tests {
         };
         let _k = 2.5;
         let _c = scl_mul(&_k,&_a);
-        assert_eq!(_b.mat,_c.mat);
-        assert_eq!(_b.col,_c.col);
-        assert_eq!(_b.row,_b.col);
+        matrix_test(&_b,&_c);
     }
 
     #[test]
@@ -660,9 +650,7 @@ mod mat_tests {
             col: 3
         };
         let _g = mul(&_d,&_e).unwrap();
-        assert_eq!(_f.mat, _g.mat);
-        assert_eq!(_f.row, _g.row);
-        assert_eq!(_f.col, _g.col);
+        matrix_test(&_f,&_g);
     }
     #[test]
     pub fn trans_works(){
@@ -680,32 +668,7 @@ mod mat_tests {
             col: 3
         };
         let _c = trans(&_a);
-        assert_eq!(_b.mat,_c.mat);
-        assert_eq!(_b.col,_c.col);
-        assert_eq!(_b.row,_c.row);
-    }
-    //#[test]
-    pub fn rev_works() {
-        let mut _a = Matrix{
-            mat: vec![vec![ 1.0, 1.0,-1.0],
-                      vec![-2.0, 0.0, 1.0],
-                      vec![ 0.0, 2.0, 1.0]
-            ],
-            row: 3,
-            col: 3
-        };
-        let _b = Matrix{
-            mat: vec![vec![-0.5,-0.75,0.25],
-                      vec![ 0.5, 0.25,0.25],
-                      vec![-1.0, -0.5, 0.5]
-            ],
-            row: 3,
-            col: 3
-        };
-        let _c = inverse(&mut _a);
-        assert_eq!(&_b.mat,&_c.mat);
-        assert_eq!(&_b.col,&_c.col);
-        assert_eq!(&_b.row,&_c.row);
+        matrix_test(&_b,&_c);
     }
     #[test]
     pub fn split_wprks() {
@@ -757,7 +720,7 @@ mod mat_tests {
         let (mut _b,_c) = LU(&_a);
         let _b = _b.unwrap();
         let _c = _c.unwrap();
-        assert_eq!(mul(&_b,&_c).unwrap().mat,_a.mat);
+        matrix_test(&mul(&_b,&_c).unwrap(),&_a);
     }
     #[test]
     pub fn is_tri_works() {
