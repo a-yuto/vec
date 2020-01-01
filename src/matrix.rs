@@ -175,15 +175,15 @@ pub fn split(a: &Matrix,n: usize) -> Result<Matrix,String> {
     d
 }
 
-pub fn lu_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Matrix,matA: &Matrix) -> (Matrix,Matrix) {
-    let n  = N - i - 1;
-    let l0           = matA.mat[0][0];
-    temp_l.mat[i][i] = matA.mat[0][0];
+pub fn lu_cal(i: usize,k: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Matrix,mat_a: &Matrix) -> (Matrix,Matrix) {
+    let n  = k - i - 1;
+    let l0           = mat_a.mat[0][0];
+    temp_l.mat[i][i] = mat_a.mat[0][0];
 
     let mut l1: Vec<f64> = vec![0.0;n];
     for j in 0..n {
-        temp_l.mat[j + i + 1][i] = matA.mat[j + 1][0];
-        l1[j]                    = matA.mat[j + 1][0];
+        temp_l.mat[j + i + 1][i] = mat_a.mat[j + 1][0];
+        l1[j]                    = mat_a.mat[j + 1][0];
     }
 
     let mut u1: Vec<f64> = vec![0.0;n];
@@ -191,8 +191,8 @@ pub fn lu_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
         println!("occors zero division!!!!!!!!!");
     }
     for j in 0..n {
-        temp_u.mat[i][j + i + 1] = matA.mat[0][j + 1] / l0;
-        u1[j]                    = matA.mat[0][j + 1] / l0;
+        temp_u.mat[i][j + i + 1] = mat_a.mat[0][j + 1] / l0;
+        u1[j]                    = mat_a.mat[0][j + 1] / l0;
     }
 
     for j in 0..n {
@@ -201,34 +201,34 @@ pub fn lu_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
         }
     }
 
-    let mut A1 = zero(n,n);
+    let mut a1 = zero(n,n);
     for j in 0..n {
-        A1.mat[j] = vec![0.0;n];
+        a1.mat[j] = vec![0.0;n];
         for k in 0..n {
-            A1.mat[j][k] = matA.mat[j + 1][k + 1] - lu.mat[j][k];
+            a1.mat[j][k] = mat_a.mat[j + 1][k + 1] - lu.mat[j][k];
         }
     }
 
-    if i == N - 1 {
+    if i == k - 1 {
         (temp_l,temp_u)
     }else{
-        lu_cal(i + 1,N,temp_l,temp_u,lu,&A1)
+        lu_cal(i + 1,k,temp_l,temp_u,lu,&a1)
     }
 }
 
 pub fn lu(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
-    let N = a.col;
-    let temp_l = zero(N,N);
-    let temp_u = iden(N);
-    let lu     = zero(N,N);
+    let n = a.col;
+    let temp_l = zero(n,n);
+    let temp_u = iden(n);
+    let lu     = zero(n,n);
 
-    let (L,U) = lu_cal(0,N,temp_l,temp_u,lu,a);
+    let (ll,uu) = lu_cal(0,n,temp_l,temp_u,lu,a);
     let l:Result<Matrix,String> = match a.col == a.row {
-        true  => Ok(L),
+        true  => Ok(ll),
         false => Err("計算不可能です".to_string()),
     };
     let u:Result<Matrix,String> = match a.col == a.row {
-        true  => Ok(U),
+        true  => Ok(uu),
         false => Err("計算不可能です".to_string()),
     };
     (l,u)
@@ -257,16 +257,16 @@ pub fn mat_print(a: &Matrix) {
 }
 
 pub fn det_for_tri(a: &Matrix) -> Result<f64,String> {
-    let mut det = 1.0;
+    let mut tmp = 1.0;
     let n = a.row;
     for i in 0..n {
-        det *= a.mat[i][i];
+        tmp *= a.mat[i][i];
     }
-    let Det:Result<f64,String> = match is_tri(&a) {
-        true  => Ok(det),
+    let det:Result<f64,String> = match is_tri(&a) {
+        true  => Ok(tmp),
         false => Err("三角行列ではありません".to_string()),
     };
-    Det
+    det
 }
 pub fn reduct(a: &Matrix) -> Matrix {
     let mut w = zero(a.col - 1,a.row - 1);
@@ -280,12 +280,12 @@ pub fn reduct(a: &Matrix) -> Matrix {
 
 pub fn inverse(a: &mut Matrix) -> Matrix{
     let n = a.col;
-    let mut inv_A = iden(n);
+    let mut inv_a = iden(n);
     for i in 0..n {
         let mut buf = 1.0/a.mat[i][i];
         for j in 0..n {
             a.mat[i][j]     *= buf;
-            inv_A.mat[i][j] *= buf;
+            inv_a.mat[i][j] *= buf;
         }
         for j in 0..n {
             if i != j {
@@ -293,11 +293,11 @@ pub fn inverse(a: &mut Matrix) -> Matrix{
             }
             for k in 0..n {
                 a.mat[j][k]     -= a.mat[i][k]*buf;
-                inv_A.mat[j][k] -= inv_A.mat[i][k]*buf;
+                inv_a.mat[j][k] -= inv_a.mat[i][k]*buf;
             }
         }
     }
-    inv_A
+    inv_a
 }
 //2×2に限定
 pub fn strassen(a: &Matrix,b: &Matrix) -> Matrix {
@@ -378,7 +378,7 @@ mod mat_tests {
 
     //#[test]
     pub fn gauss_works(){
-        let a: Matrix = Matrix{
+        let _a: Matrix = Matrix{
             mat:vec![vec![ 3.0, 3.0,-5.0,-6.0],
                      vec![ 1.0, 2.0,-3.0,-1.0],
                      vec![ 2.0, 3.0,-5.0,-3.0],
@@ -387,7 +387,7 @@ mod mat_tests {
             col: 4,
         };
 
-        let b: Matrix = Matrix {
+        let _b: Matrix = Matrix {
             mat:vec![vec![ 4.0,18.0,-16.0,-3.0],
                      vec![ 0.0,-1.0,  1.0, 1.0],
                      vec![ 1.0, 3.0, -3.0, 0.0],
