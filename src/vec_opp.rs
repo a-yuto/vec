@@ -1,5 +1,4 @@
 use nearly_eq::*;
-pub struct VecOpp;
 
 pub fn add(a: &Vec<f64>,b: &Vec<f64>) -> Result<Vec<f64>,String>{
     let mut c: Vec<f64> = Vec::new();
