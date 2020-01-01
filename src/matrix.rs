@@ -1,6 +1,3 @@
-#[macro_use]
-use nearly_eq::*;
-
 pub struct Matrix {
     mat: Vec<Vec<f64>>,
     row: usize,
@@ -178,7 +175,7 @@ pub fn split(a: &Matrix,n: usize) -> Result<Matrix,String> {
     d
 }
 
-pub fn LU_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Matrix,matA: &Matrix) -> (Matrix,Matrix) {
+pub fn lu_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Matrix,matA: &Matrix) -> (Matrix,Matrix) {
     let n  = N - i - 1;
     let l0           = matA.mat[0][0];
     temp_l.mat[i][i] = matA.mat[0][0];
@@ -215,17 +212,17 @@ pub fn LU_cal(i: usize,N: usize,mut temp_l: Matrix,mut temp_u: Matrix,mut lu: Ma
     if i == N - 1 {
         (temp_l,temp_u)
     }else{
-        LU_cal(i + 1,N,temp_l,temp_u,lu,&A1)
+        lu_cal(i + 1,N,temp_l,temp_u,lu,&A1)
     }
 }
 
-pub fn LU(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
+pub fn lu(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
     let N = a.col;
     let temp_l = zero(N,N);
     let temp_u = iden(N);
     let lu     = zero(N,N);
 
-    let (L,U) = LU_cal(0,N,temp_l,temp_u,lu,a);
+    let (L,U) = lu_cal(0,N,temp_l,temp_u,lu,a);
     let l:Result<Matrix,String> = match a.col == a.row {
         true  => Ok(L),
         false => Err("計算不可能です".to_string()),
@@ -281,12 +278,11 @@ pub fn reduct(a: &Matrix) -> Matrix {
     w
 }
 
-pub fn inverse(mut a: &mut Matrix) -> Matrix{
+pub fn inverse(a: &mut Matrix) -> Matrix{
     let n = a.col;
     let mut inv_A = iden(n);
-    let mut buf   = 0.0;
     for i in 0..n {
-        buf = 1.0/a.mat[i][i];
+        let mut buf = 1.0/a.mat[i][i];
         for j in 0..n {
             a.mat[i][j]     *= buf;
             inv_A.mat[i][j] *= buf;
@@ -333,7 +329,7 @@ pub fn connect(a: &mut Matrix,b: &mut Matrix) -> Result<Matrix,String> {
     let ok = a.row == b.row;
     let mut matrix:Vec<Vec<f64>> = Vec::new();
     for i in 0..a.col {
-        let mut left  = &mut a.mat[i];
+        let left  = &mut a.mat[i];
         let mut right = &mut b.mat[i];
         left.append(&mut right);
         matrix.push(left.to_vec());
@@ -691,7 +687,7 @@ mod mat_tests {
 
     }
     #[test]
-    pub fn LU_works() {
+    pub fn lu_works() {
         let _a = Matrix{
             mat: vec![vec![ 8.0,16.0,24.0,32.0],
                       vec![ 2.0, 7.0,12.0,17.0],
@@ -717,7 +713,7 @@ mod mat_tests {
             row: 4,
             col: 4
         };
-        let (mut _b,_c) = LU(&_a);
+        let (mut _b,_c) = lu(&_a);
         let _b = _b.unwrap();
         let _c = _c.unwrap();
         matrix_test(&mul(&_b,&_c).unwrap(),&_a);
