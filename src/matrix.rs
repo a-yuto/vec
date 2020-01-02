@@ -1,41 +1,76 @@
+#[derive(Debug)]
 pub struct Matrix {
     mat: Vec<Vec<f64>>,
     row: usize,
     col: usize
 }
 
-pub fn get_row(k: usize,a: &Matrix) -> Result<Matrix,String> {
-    let b =  vec![a.mat[k - 1].clone();1];
-    let r = b[0].len();
-    let l = b.len();
-    let c:Result<Matrix,String> = match true {
-        true  => Ok(
-            Matrix{
-                mat: b,
-                row: r,
-                col: l
-            }
-        ),
-        false => Err("計算不可能です".to_string()),
-    };
-    c
+pub fn add(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+    let ans =
+    (0..a.col).map(|i| {
+        (0..a.row).map(|j|
+            a.mat[i][j] + b.mat[i][j]
+        ).collect()
+    }).collect();
+    match is_same_size(&a,&b) {
+        true => Ok(Matrix {
+            mat: ans,
+            row: a.row,
+            col: a.col
+        }),
+        false => Err("cannot calicurate.".to_string())
+    }
 }
 
-pub fn get_col(k: usize,a: &Matrix) -> Result<Matrix,String> {
-    let mut b = zero(1,a.col);
+
+pub fn mul(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+    let mut ans: Vec<Vec<f64>> = vec![vec![0.0;b.row];a.col];
     for i in 0..a.col {
-        println!("{}",i);
-        b.mat[i][0] = a.mat[i][k - 1];
+        for j in 0..b.row {
+            for k in 0..a.row {
+                ans[i][j] += &a.mat[i][k]*&b.mat[k][j];
+            }
+        }
     }
-    let c:Result<Matrix,String> = match true  {
-        true  => Ok(b),
+    let row = ans[0].len();
+    let col = ans.len();
+    match can_mul(&a,&b) {
+        true  => Ok(
+                Matrix {
+                    mat: ans,
+                    row: row,
+                    col: col
+                }
+            ),
         false => Err("計算不可能です".to_string()),
-    };
-    c
+    }
 }
-pub fn print_mat(a: &Matrix) {
-    let mat = &a.mat;
-    for vec in mat {
+
+pub fn get_row(spe_row: usize,matrix: &Matrix) -> Result<Matrix,&str> {
+    let row = vec![matrix.mat[spe_row - 1].clone();1];
+    match matrix.row > spe_row - 1 {
+        true  => Ok(
+            Matrix{
+                mat: row,
+                row: matrix.row,
+                col: 1
+            }
+        ),
+        false => Err("The row dose not exist."),
+    }
+}
+pub fn get_col(spe_col: usize,matrix: &Matrix) -> Result<Matrix,&str> {
+    let mut col = zero(1,matrix.col);
+    for i in 0..matrix.col {
+        col.mat[i][0] = matrix.mat[i][spe_col - 1];
+    }
+    match matrix.col > spe_col - 1 {
+        true  => Ok(col),
+        false => Err("The col does not exist."),
+    }
+}
+pub fn print_mat(matrix: &Matrix) {
+    for vec in &matrix.mat {
         println!("{:?}",vec);
     }
     println!("");
@@ -47,21 +82,15 @@ pub fn zero(_row: usize,_col: usize) -> Matrix {
         col: _col
     }
 }
-
 pub fn iden(n: usize) -> Matrix {
-    let mut b: Vec<Vec<f64>> = Vec::new();
-    for i in 0..n {
-        let mut c: Vec<f64> = Vec::new();
-        for j in 0..n {
-            match i == j {
-                true  => c.push(1.0),
-                false => c.push(0.0), 
-            }
-        }
-        b.push(c);
-    }
+    let iden_matrix = 
+    (0..n).map(|i| {
+            (0..n).map(|j| 
+                if i == j {1.0} else {0.0}
+            ).collect()
+    }).collect();
     Matrix {
-        mat: b,
+        mat: iden_matrix,
         row: n,
         col: n
     }
@@ -73,26 +102,6 @@ pub fn is_same_size(a: &Matrix,b: &Matrix) -> bool {
 
 pub fn can_mul(a: &Matrix,b: &Matrix) -> bool {
     a.row == b.col 
-}
-
-pub fn add(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
-    let mut _c = vec![vec![0.0;a.row];a.col];
-    for i in 0..a.col {
-        for j in 0..a.row {
-            _c[i][j] = a.mat[i][j] + b.mat[i][j];
-        }
-    }
-    let d:Result<Matrix,String> = match is_same_size(&a,&b) {
-        true  => Ok(
-                Matrix {
-                    mat: _c,
-                    row: a.row,
-                    col: a.col
-                }
-            ),
-        false => Err("計算不可能です".to_string()),
-    };
-    d
 }
 
 pub fn scl_mul(k: &f64,a: &Matrix) -> Matrix {
@@ -111,44 +120,22 @@ pub fn scl_mul(k: &f64,a: &Matrix) -> Matrix {
     }
 }
 
-pub fn mul(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
-    let mut c: Vec<Vec<f64>> = vec![vec![0.0;b.row];a.col];
-    for i in 0..a.col {
-        for j in 0..b.row {
-            for k in 0..a.row {
-                c[i][j] += &a.mat[i][k]*&b.mat[k][j];
-            }
-        }
-    }
-
-    let row = c[0].len();
-    let col = c.len();
-    let d:Result<Matrix,String> = match can_mul(&a,&b) {
-        true  => Ok(
-                Matrix {
-                    mat: c,
-                    row: row,
-                    col: col
-                }
-            ),
-        false => Err("計算不可能です".to_string()),
-    };
-    d
-}
 pub fn trans(a: &Matrix) ->Matrix {
-    let mut b: Vec<Vec<f64>>  = vec![vec![0.0;a.col];a.row];
-    for i in 0..a.row {
-        for j in 0..a.col {
-            b[i][j] = a.mat[j][i];
-        }
-    }
+    let ans : Vec<Vec<f64>> = 
+    (0..a.row).map(|i| {
+        (0..a.col).map(|j| 
+            a.mat[j][i]
+        ).collect()
+    }).collect();
     Matrix {
-        mat: b,
+        mat: ans,
         row: a.col,
         col: a.row
     }
 }
 
+
+//LU分解用の行列を縮小させる関数
 pub fn split(a: &Matrix,n: usize) -> Result<Matrix,String> {
     let can = (a.col == a.row) && (a.col != 1);
     let s   = a.col - n;
@@ -262,11 +249,10 @@ pub fn det_for_tri(a: &Matrix) -> Result<f64,String> {
     for i in 0..n {
         tmp *= a.mat[i][i];
     }
-    let det:Result<f64,String> = match is_tri(&a) {
+    match is_tri(&a) {
         true  => Ok(tmp),
         false => Err("三角行列ではありません".to_string()),
-    };
-    det
+    }
 }
 pub fn reduct(a: &Matrix) -> Matrix {
     let mut w = zero(a.col - 1,a.row - 1);
