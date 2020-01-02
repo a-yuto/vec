@@ -1,3 +1,6 @@
+use std::ops::{Add,Sub,Mul};
+
+
 #[derive(Debug)]
 pub struct Matrix {
     mat: Vec<Vec<f64>>,
@@ -5,7 +8,14 @@ pub struct Matrix {
     col: usize
 }
 
-pub fn add(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+impl Add for Matrix{
+    type Output = Matrix;
+    fn add(self, other: Matrix) -> Matrix {
+        add_mat(&self,&other).unwrap()    
+    }
+}
+
+pub fn add_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
     let ans =
     (0..a.col).map(|i| {
         (0..a.row).map(|j|
@@ -23,7 +33,60 @@ pub fn add(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
 }
 
 
-pub fn mul(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+impl Sub for Matrix{
+    type Output = Matrix;
+    fn sub(self, other: Matrix) -> Matrix {
+        sub_mat(&self,&other).unwrap()
+    }
+}
+
+pub fn sub_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
+    let ans =
+    (0..a.col).map(|i| {
+        (0..a.row).map(|j|
+            a.mat[i][j] - b.mat[i][j]
+        ).collect()
+    }).collect();
+    match is_same_size(&a,&b) {
+        true => Ok(Matrix {
+            mat: ans,
+            row: a.row,
+            col: a.col
+        }),
+        false => Err("cannot calicurate.".to_string())
+    }
+}
+
+impl Mul<Matrix> for Matrix {
+    type Output = Matrix;
+    fn mul(self,other: Matrix) -> Matrix {
+        mul_mat(&self,&other).unwrap()
+    }   
+}
+
+impl Mul<f64> for Matrix {
+    type Output = Matrix;
+    fn mul(self,other: f64) -> Matrix {
+        scl_mul(&other,&self) 
+    }    
+}
+
+pub fn scl_mul(k: &f64,a: &Matrix) -> Matrix {
+    let mut b: Vec<Vec<f64>> = Vec::new();
+    for vec in &a.mat {
+        let mut c: Vec<f64> = Vec::new();
+        for val in vec {
+            c.push(val*k);
+        }
+        b.push( c );
+    }
+    Matrix{
+        mat: b,
+        row: a.row,
+        col: a.col
+    }
+}
+pub fn mul_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
     let mut ans: Vec<Vec<f64>> = vec![vec![0.0;b.row];a.col];
     for i in 0..a.col {
         for j in 0..b.row {
@@ -103,23 +166,6 @@ pub fn is_same_size(a: &Matrix,b: &Matrix) -> bool {
 pub fn can_mul(a: &Matrix,b: &Matrix) -> bool {
     a.row == b.col 
 }
-
-pub fn scl_mul(k: &f64,a: &Matrix) -> Matrix {
-    let mut b: Vec<Vec<f64>> = Vec::new();
-    for vec in &a.mat {
-        let mut c: Vec<f64> = Vec::new();
-        for val in vec {
-            c.push(val*k);
-        }
-        b.push( c );
-    }
-    Matrix{
-        mat: b,
-        row: a.row,
-        col: a.col
-    }
-}
-
 pub fn trans(a: &Matrix) ->Matrix {
     let ans : Vec<Vec<f64>> = 
     (0..a.row).map(|i| {
@@ -397,7 +443,7 @@ mod mat_tests {
             col: 2,
             row: 2
         };
-        matrix_test(&mul(&a,&b).unwrap(),&strassen(&a,&b));
+        matrix_test(&mul_mat(&a,&b).unwrap(),&strassen(&a,&b));
 
     }
     #[test]
@@ -512,7 +558,7 @@ mod mat_tests {
         assert!(!is_same_size(&_b,&_c));
     }
     #[test]
-    pub fn add_works() {
+    pub fn add_mat_works() {
         let _a = Matrix{
             mat: vec![vec![1.0,2.0],
                       vec![3.0,4.0]],
@@ -531,7 +577,8 @@ mod mat_tests {
             row: 2,
             col: 2,
         };
-        let _d = add(&_b,&_c).unwrap();
+        let _d = add_mat(&_b,&_c).unwrap();
+        matrix_test(&_a,&(_b + _c));
         matrix_test(&_a,&_d);
 
         let _d = Matrix{
@@ -552,10 +599,12 @@ mod mat_tests {
             row: 3,
             col: 2
         };
-        let _g = add(&_d,&_e).unwrap();
+        let _g = add_mat(&_d,&_e).unwrap();
         matrix_test(&_f,&_g);
-    }
 
+        matrix_test(&_f,&(_d + _e));
+    }
+    
 
     #[test]
     pub fn scl_mul_works() {
@@ -573,6 +622,7 @@ mod mat_tests {
         };
         let _k = 2.5;
         let _c = scl_mul(&_k,&_a);
+        matrix_test(&_b,&(_a * _k));
         matrix_test(&_b,&_c);
     }
 
@@ -607,7 +657,7 @@ mod mat_tests {
     }
 
     #[test]
-    pub fn mul_works() {
+    pub fn mul_mat_works() {
         let _d = Matrix{
             mat: vec![vec![ 1.0, 2.0, 4.0, 5.0, 1.0],
                       vec![ 0.0, 2.0, 1.0, 1.0, 3.0],
@@ -631,8 +681,9 @@ mod mat_tests {
             row: 2,
             col: 3
         };
-        let _g = mul(&_d,&_e).unwrap();
+        let _g = mul_mat(&_d,&_e).unwrap();
         matrix_test(&_f,&_g);
+        matrix_test(&_f,&(_d * _e));
     }
     #[test]
     pub fn trans_works(){
@@ -702,7 +753,7 @@ mod mat_tests {
         let (mut _b,_c) = lu(&_a);
         let _b = _b.unwrap();
         let _c = _c.unwrap();
-        matrix_test(&mul(&_b,&_c).unwrap(),&_a);
+        matrix_test(&mul_mat(&_b,&_c).unwrap(),&_a);
     }
     #[test]
     pub fn is_tri_works() {
