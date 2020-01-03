@@ -1,42 +1,33 @@
-use std::ops;
+extern crate matrix;
+use vec::matrix::*;
 
-struct Foo;
-struct Bar;
-
-#[derive(Debug)]
-struct FooBar;
-
-#[derive(Debug)]
-struct BarFoo;
-
-// `std::ops::Add`トレイトは`+`の振る舞いを規定するために使用される
-// ここでは`Foo`に対して`Add<Bar>`を実装する。これは加算時の右辺が`Bar`型
-// の時に呼び出されるトレイト。つまり以下は`Foo + Bar = FooBar`という振る舞いを
-// もたらす。
-impl ops::Add<Bar> for Foo {
-    type Output = FooBar;
-
-    fn add(self, _rhs: Bar) -> FooBar {
-        println!("> Foo.add(Bar) was called");
-
-        FooBar
+fn rev(matrix: &Matrix) -> Result<Matrix,String> {
+    match true {
+        true  => Ok(iden(2)),
+        false => Err("cannot".to_string())    
     }
 }
 
-// 型を反転することで、非可換の加算を実装できる。ここでは`Bar`に対して
-// `Add<Foo>`を実装する。これは加算時の右辺が`Foo`型の時に呼び出されるメソッド。
-// つまり以下は`Bar + Foo = BarFoo`という結果をもたらす。
-impl ops::Add<Foo> for Bar {
-    type Output = BarFoo;
 
-    fn add(self, _rhs: Foo) -> BarFoo {
-        println!("> Bar.add(Foo) was called");
-
-        BarFoo
-    }
+#[test]
+fn rev_works() {
+    let a: Matrix = Matrix{
+        mat: vec![vec![4.0,3.0],
+                  vec![2.0,1.0]
+        ],
+        row: 2,
+        col: 2
+    };
+    matrix_test(&iden(2),&(&rev(&a).unwrap() * &a));    
 }
-
 fn main() {
-    println!("Foo + Bar = {:?}", Foo + Bar);
-    println!("Bar + Foo = {:?}", Bar + Foo);
+    let b: Matrix = Matrix{
+        mat: vec![vec![4.0,3.0],
+                  vec![2.0,1.0]
+        ],
+        row: 2,
+        col: 2
+    };
+    mat_print(&b);
 }
+
