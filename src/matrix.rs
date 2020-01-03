@@ -1,17 +1,23 @@
 use std::ops::{Add,Sub,Mul};
 
-
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Matrix {
     mat: Vec<Vec<f64>>,
     row: usize,
     col: usize
 }
 
-impl Add for Matrix{
+impl Add for &Matrix{
     type Output = Matrix;
-    fn add(self, other: Matrix) -> Matrix {
-        add_mat(&self,&other).unwrap()    
+    fn add(self, other: &Matrix) -> Matrix {
+        add_mat(self,other).unwrap() 
+    }
+}
+
+impl Add<&f64> for &Matrix {
+    type Output = Matrix;
+    fn add(self,other: &f64) -> Matrix {
+        scl_add(other,self)
     }
 }
 
@@ -32,11 +38,52 @@ pub fn add_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
     }
 }
 
+pub fn scl_add(k: &f64,a: &Matrix) -> Matrix {
+    let mut b: Vec<Vec<f64>> = Vec::new();
+    for vec in &a.mat {
+        let mut c: Vec<f64> = Vec::new();
+        for val in vec {
+            c.push(val+k);
+        }
+        b.push( c );
+    }
+    Matrix{
+        mat: b,
+        row: a.row,
+        col: a.col
+    }
+}
 
-impl Sub for Matrix{
+
+impl Sub for &Matrix{
     type Output = Matrix;
-    fn sub(self, other: Matrix) -> Matrix {
-        sub_mat(&self,&other).unwrap()
+    fn sub(self, other: &Matrix) -> Matrix {
+        sub_mat(self,other).unwrap()
+    }
+}
+
+
+impl Sub<&f64> for &Matrix {
+    type Output = Matrix;
+    fn sub(self,other: &f64) -> Matrix {
+        scl_sub(&other,&self)
+    }
+}
+
+
+pub fn scl_sub(k: &f64,a: &Matrix) -> Matrix {
+    let mut b: Vec<Vec<f64>> = Vec::new();
+    for vec in &a.mat {
+        let mut c: Vec<f64> = Vec::new();
+        for val in vec {
+            c.push(val-k);
+        }
+        b.push( c );
+    }
+    Matrix{
+        mat: b,
+        row: a.row,
+        col: a.col
     }
 }
 
@@ -57,17 +104,17 @@ pub fn sub_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
     }
 }
 
-impl Mul<Matrix> for Matrix {
+impl Mul<&Matrix> for &Matrix {
     type Output = Matrix;
-    fn mul(self,other: Matrix) -> Matrix {
+    fn mul(self,other: &Matrix) -> Matrix {
         mul_mat(&self,&other).unwrap()
     }   
 }
 
-impl Mul<f64> for Matrix {
+impl Mul<&f64> for &Matrix {
     type Output = Matrix;
-    fn mul(self,other: f64) -> Matrix {
-        scl_mul(&other,&self) 
+    fn mul(self,other: &f64) -> Matrix {
+        scl_mul(other,self) 
     }    
 }
 
@@ -578,7 +625,7 @@ mod mat_tests {
             col: 2,
         };
         let _d = add_mat(&_b,&_c).unwrap();
-        matrix_test(&_a,&(_b + _c));
+        matrix_test(&_a,&(&_b + &_c));
         matrix_test(&_a,&_d);
 
         let _d = Matrix{
@@ -602,9 +649,48 @@ mod mat_tests {
         let _g = add_mat(&_d,&_e).unwrap();
         matrix_test(&_f,&_g);
 
-        matrix_test(&_f,&(_d + _e));
+        matrix_test(&_f,&(&_d + &_e));
     }
     
+    #[test]
+    pub fn scl_add_works() {
+        let _a = Matrix{
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            row: 2,
+            col: 2
+        };
+        let _b = Matrix{
+            mat: vec![vec![3.5,4.5],
+                      vec![5.5,6.5]],
+            row: 2,
+            col: 2
+        };
+        let _k = 2.5;
+        let _c = scl_add(&_k,&_a);
+        matrix_test(&_b,&(&_a + &_k));
+        matrix_test(&_b,&_c);
+    } 
+
+    #[test]
+    pub fn scl_sub_works() {
+        let _a = Matrix{
+            mat: vec![vec![1.0,2.0],
+                      vec![3.0,4.0]],
+            row: 2,
+            col: 2
+        };
+        let _b = Matrix{
+            mat: vec![vec![-1.5,-0.5],
+                      vec![ 0.5, 1.5]],
+            row: 2,
+            col: 2
+        };
+        let _k = 2.5;
+        let _c = scl_sub(&_k,&_a);
+        matrix_test(&_b,&(&_a - &_k));
+        matrix_test(&_b,&_c);
+    }
 
     #[test]
     pub fn scl_mul_works() {
@@ -622,7 +708,7 @@ mod mat_tests {
         };
         let _k = 2.5;
         let _c = scl_mul(&_k,&_a);
-        matrix_test(&_b,&(_a * _k));
+        matrix_test(&_b,&(&_a * &_k));
         matrix_test(&_b,&_c);
     }
 
@@ -683,7 +769,7 @@ mod mat_tests {
         };
         let _g = mul_mat(&_d,&_e).unwrap();
         matrix_test(&_f,&_g);
-        matrix_test(&_f,&(_d * _e));
+        matrix_test(&_f,&(&_d * &_e));
     }
     #[test]
     pub fn trans_works(){
