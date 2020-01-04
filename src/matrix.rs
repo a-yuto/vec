@@ -2,11 +2,32 @@ use std::ops::{Add,Sub,Mul};
 
 #[derive(Debug,Clone)]
 pub struct Matrix {
-    mat: Vec<Vec<f64>>,
-    row: usize,
-    col: usize
+    pub mat: Vec<Vec<f64>>,
+    pub row: usize,
+    pub col: usize
 }
-
+///
+/// #Example
+/// let _a = Matrix{
+///            mat: vec![vec![1.0,2.0]
+///                   vec![3.0,4.0]],
+///            row: 2,
+///            col: 2
+///        };
+///        let _b = Matrix{
+///            mat: vec![vec![1.0,0.0],
+///                      vec![0.0,1.0]],
+///            row: 2,
+///            col: 2
+///        };
+///        let _c = Matrix{
+///            mat: vec![vec![0.0,2.0],
+///                      vec![3.0,3.0]],
+///            row: 2,
+///            col: 2,
+///        };
+///        add_mat(&_b,&_c).unwrap();
+///        let ans = &a + &b
 impl Add for &Matrix{
     type Output = Matrix;
     fn add(self, other: &Matrix) -> Matrix {
