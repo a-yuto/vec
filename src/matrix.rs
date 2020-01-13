@@ -6,28 +6,6 @@ pub struct Matrix {
     pub row: usize,
     pub col: usize
 }
-///
-/// #Example
-/// let _a = Matrix{
-///            mat: vec![vec![1.0,2.0]
-///                   vec![3.0,4.0]],
-///            row: 2,
-///            col: 2
-///        };
-///        let _b = Matrix{
-///            mat: vec![vec![1.0,0.0],
-///                      vec![0.0,1.0]],
-///            row: 2,
-///            col: 2
-///        };
-///        let _c = Matrix{
-///            mat: vec![vec![0.0,2.0],
-///                      vec![3.0,3.0]],
-///            row: 2,
-///            col: 2,
-///        };
-///        add_mat(&_b,&_c).unwrap();
-///        let ans = &a + &b
 impl Add for &Matrix{
     type Output = Matrix;
     fn add(self, other: &Matrix) -> Matrix {
@@ -178,8 +156,8 @@ pub fn mul_mat(a: &Matrix,b: &Matrix) -> Result<Matrix,String> {
 }
 
 pub fn get_row(spe_row: usize,matrix: &Matrix) -> Result<Matrix,&str> {
-    let row = vec![matrix.mat[spe_row - 1].clone();1];
-    match matrix.row > spe_row - 1 {
+    let row = vec![matrix.mat[spe_row].clone();1];
+    match spe_row < matrix.col {
         true  => Ok(
             Matrix{
                 mat: row,
@@ -193,9 +171,9 @@ pub fn get_row(spe_row: usize,matrix: &Matrix) -> Result<Matrix,&str> {
 pub fn get_col(spe_col: usize,matrix: &Matrix) -> Result<Matrix,&str> {
     let mut col = zero(1,matrix.col);
     for i in 0..matrix.col {
-        col.mat[i][0] = matrix.mat[i][spe_col - 1];
+        col.mat[i][0] = matrix.mat[i][spe_col];
     }
-    match matrix.col > spe_col - 1 {
+    match matrix.row > spe_col {
         true  => Ok(col),
         false => Err("The col does not exist."),
     }
@@ -322,7 +300,6 @@ pub fn lu(a: &Matrix) -> (Result<Matrix,String>,Result<Matrix,String>) {
     let temp_l = zero(n,n);
     let temp_u = iden(n);
     let lu     = zero(n,n);
-
     let (ll,uu) = lu_cal(0,n,temp_l,temp_u,lu,a);
     let l:Result<Matrix,String> = match a.col == a.row {
         true  => Ok(ll),
@@ -433,7 +410,6 @@ pub fn connect(a: &mut Matrix,b: &mut Matrix) -> Result<Matrix,String> {
         let mut right = &mut b.mat[i];
         left.append(&mut right);
         matrix.push(left.to_vec());
-        println!("{:?}",matrix);
     }
 
     match ok {
@@ -447,6 +423,36 @@ pub fn connect(a: &mut Matrix,b: &mut Matrix) -> Result<Matrix,String> {
         )
     }
 }
+pub fn exchange(a: &Matrix, x: usize, y: usize) -> Result<Matrix,String> {
+    let _can_exchange = (1 <= x) && (x < a.col) && (1 <= y) && (y < a.col);
+    let  matrix = &mut a.mat.clone();
+    matrix.swap(x - 1,y - 1);
+    match true {
+        true  => Ok(Matrix{
+                mat: matrix.to_vec(),
+                col: a.col,
+                row: a.row
+            }
+        ),
+        false => Err("指定地が範囲外です。".to_string())
+    }
+}
+
+
+
+pub fn div_for_row(mat: &Matrix,_row: usize,_scl: f64) -> Matrix {
+    let tmp = &(&get_row(_row,&mat).unwrap() * &(1.0 / _scl)).mat[0];
+    let mut ans = mat.clone();
+    ans.mat[_row] = tmp.to_vec();
+    ans
+}
+
+pub fn basic_deform_2_row(_mat :&Matrix, scl: f64, col: usize, coled: usize) -> Matrix {
+    let mut tmp      = _mat.clone();
+    let changed_row  = &(&get_row(col,&_mat).unwrap() * &scl) + &get_row(coled,&_mat).unwrap();
+    tmp.mat[coled]  = changed_row.mat[0].clone();
+    tmp
+}
 
 //----------------------------ここからテストです---------------------------
 pub fn matrix_test(a: &Matrix,b: &Matrix) {
@@ -458,6 +464,64 @@ pub fn matrix_test(a: &Matrix,b: &Matrix) {
 #[cfg(test)]
 mod mat_tests {
     use super::*;
+
+
+    #[test]
+    fn div_for_row_works() {
+        let _a = Matrix{
+             mat: vec![vec![ 8.0,16.0,24.0,32.0],
+                       vec![ 2.0, 7.0,12.0,17.0],
+                       vec![ 6.0,17.0,32.0,59.0],
+                       vec![ 7.0,22.0,46.0,105.0]],
+             row: 4,
+             col: 4
+        };
+        let _b = Matrix{
+            mat: vec![vec![ 1.0, 2.0, 3.0, 4.0],
+                      vec![ 2.0, 7.0,12.0,17.0],
+                      vec![ 6.0,17.0,32.0,59.0],
+                      vec![ 7.0,22.0,46.0,105.0]],
+            row: 4,
+            col: 4
+        };
+         matrix_test(&div_for_row(&_a,0,_a.mat[0][0]),&_b);
+    }
+
+    #[test]
+    fn basic_deform_2_row_works() {
+        let mut _a = Matrix{
+            mat: vec![vec![ 8.0,16.0,24.0,32.0],
+                      vec![ 2.0, 7.0,12.0,17.0],
+                      vec![ 6.0,17.0,32.0,59.0],
+                      vec![ 7.0,22.0,46.0,105.0]],
+            row: 4,
+            col: 4
+        };
+        let _b = Matrix{
+            mat: vec![vec![ 4.0, 2.0, 0.0,-2.0],
+                      vec![ 2.0, 7.0,12.0,17.0],
+                      vec![ 6.0,17.0,32.0,59.0],
+                      vec![ 7.0,22.0,46.0,105.0]],
+            row: 4,
+            col: 4
+         };
+         matrix_test(&basic_deform_2_row(&_a,-2.0,1,0),&_b);
+    }
+
+
+    #[test]
+    pub fn exchenge_works() {
+        let a = iden(3);
+        let b = Matrix {
+            mat: vec![vec![0.0,0.0,1.0],
+                      vec![0.0,1.0,0.0],
+                      vec![1.0,0.0,0.0]],
+            row: 3,
+            col: 3  
+        };
+        matrix_test(&exchange(&a,1,3).unwrap(),&b)
+    }
+
     #[test]
     pub fn connect_works(){
         let mut a: Matrix = Matrix {
@@ -476,27 +540,6 @@ mod mat_tests {
         matrix_test(&connect(&mut a,&mut e).unwrap(),&b);
     }
 
-    //#[test]
-    pub fn gauss_works(){
-        let _a: Matrix = Matrix{
-            mat:vec![vec![ 3.0, 3.0,-5.0,-6.0],
-                     vec![ 1.0, 2.0,-3.0,-1.0],
-                     vec![ 2.0, 3.0,-5.0,-3.0],
-                     vec![-1.0, 0.0, 2.0, 2.0]],
-            row: 4,
-            col: 4,
-        };
-
-        let _b: Matrix = Matrix {
-            mat:vec![vec![ 4.0,18.0,-16.0,-3.0],
-                     vec![ 0.0,-1.0,  1.0, 1.0],
-                     vec![ 1.0, 3.0, -3.0, 0.0],
-                     vec![ 1.0, 6.0, -5.0,-1.0]],
-            row: 4,
-            col: 4
-        };
-        //assert_eq!(gauss(&a).mat,b.mat);
-    }
     #[test]
     pub fn strassen_works(){
         let a = Matrix{
@@ -545,7 +588,7 @@ mod mat_tests {
             col: 5
         };
         let _b = Matrix{
-            mat: vec![vec![0.0,3.0]],
+            mat: vec![vec![1.0,-2.0]],
             row: 2,
             col: 1
         };
@@ -572,7 +615,7 @@ mod mat_tests {
             row: 1,
             col: 5
         };
-        let _c = get_col(2,&_a).unwrap();
+        let _c = get_col(1,&_a).unwrap();
         matrix_test(&_c,&_b);
     }
     #[test]
