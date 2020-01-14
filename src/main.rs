@@ -1,64 +1,63 @@
 extern crate matrix;
 use vec::matrix::*;
 
-
-
-
-
-pub fn div_for_row(mat: &Matrix,_row: usize,_scl: f64) -> Matrix {
-    let tmp = &(&get_row(_row,&mat).unwrap() * &(1.0 / _scl)).mat[0];
-    let mut ans = mat.clone();
-    ans.mat[_row] = tmp.to_vec();
-    ans
-}
-
-pub fn basic_deform_2_row(_mat :&Matrix, scl: f64, col: usize, coled: usize) -> Matrix {
-    let mut tmp      = _mat.clone();
-    let changed_row  = &(&get_row(col,&_mat).unwrap() * &scl) + &get_row(coled,&_mat).unwrap();
-    tmp.mat[coled]  = changed_row.mat[0].clone();
-    tmp
-}
-
-#[test]
-fn div_for_row_works() {
-    let _a = Matrix{
-        mat: vec![vec![ 8.0,16.0,24.0,32.0],
-                  vec![ 2.0, 7.0,12.0,17.0],
-                  vec![ 6.0,17.0,32.0,59.0],
-                  vec![ 7.0,22.0,46.0,105.0]],
-        row: 4,
-        col: 4
-    };
-    let _b = Matrix{
-        mat: vec![vec![ 1.0, 2.0, 3.0, 4.0],
-                  vec![ 2.0, 7.0,12.0,17.0],
-                  vec![ 6.0,17.0,32.0,59.0],
-                  vec![ 7.0,22.0,46.0,105.0]],
-        row: 4,
-        col: 4
-    };
-    matrix_test(&div_for_row(&_a,0,_a.mat[0][0]),&_b);    
+pub fn line_eq(_A: &Matrix, _b: &Matrix) -> Matrix {
+    /* A  * x = b
+     * LU * x = b
+     * l  * y = b (U * x = y)
+     *
+     * U  * x = y
+    */
+    let (_rl,_ru) = lu(&_A);
+    let       _l  = _rl.unwrap();
+    let       _u  = _ru.unwrap();
+    let mut   _y  = zero(1,_A.col);
+    //solve l  * y = b
+    for i in (0.._l.row) {
+        _y.mat[i][0] = _b.mat[i][0];
+        for j in (0..i) {
+            _y.mat[i][0] += - 1.0 *  _y.mat[j][0] * _l.mat[i][j] 
+        }
+        _y.mat[i][0] /= _l.mat[i][i];
+    }
+    //solve U * x = y
+    print_mat(&_u);
+    println!(" * x = ");
+    print_mat(&_y);
+    let mut _x = zero(1,_A.col);
+    for i in (0.._u.row).rev() {
+        _x.mat[i][0] = _y.mat[i][0];
+        for j in (i+1.._u.row) {
+            _x.mat[i][0] += - 1.0 *  _x.mat[j][0] * _u.mat[i][j]
+        }
+    }
+    _x
 }
 
 #[test]
-fn basic_deform_2_row_works() {
-    let mut _a = Matrix{
-        mat: vec![vec![ 8.0,16.0,24.0,32.0],
-                  vec![ 2.0, 7.0,12.0,17.0],
-                  vec![ 6.0,17.0,32.0,59.0],
-                  vec![ 7.0,22.0,46.0,105.0]],
-        row: 4,
-        col: 4
+fn line_eq_work(){
+    let _A = Matrix {
+        mat: vec![vec![1.0,1.0,1.0],
+                  vec![4.0,3.0,5.0],
+                  vec![3.0,5.0,3.0]],
+        row: 3,
+        col: 3
     };
-    let _b = Matrix{
-        mat: vec![vec![ 4.0, 2.0, 0.0,-2.0],
-                  vec![ 2.0, 7.0,12.0,17.0],
-                  vec![ 6.0,17.0,32.0,59.0],
-                  vec![ 7.0,22.0,46.0,105.0]],
-        row: 4,
-        col: 4
+    let _b = Matrix {
+        mat: vec![vec![1.0],
+                  vec![6.0],
+                  vec![4.0]],
+        row: 1,
+        col: 3
     };
-    matrix_test(&basic_deform_2_row(&_a,-2.0,1,0),&_b);
+    let _x = Matrix {
+        mat: vec![vec![-2.0],
+                  vec![ 0.5],
+                  vec![2.5]],
+        row: 1,
+        col: 3
+    };
+    matrix_test(&line_eq(&_A,&_b),&_x);
 }
 
 fn main() {
