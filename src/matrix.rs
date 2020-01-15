@@ -454,33 +454,30 @@ pub fn basic_deform_2_row(_mat :&Matrix, scl: f64, col: usize, coled: usize) -> 
     tmp
 }
 
-pub fn line_eq(_A: &Matrix, _b: &Matrix) -> Matrix {
+pub fn line_eq(_a: &Matrix, _b: &Matrix) -> Matrix {
     /* A  * x = b
      * LU * x = b
      * l  * y = b (U * x = y)
      *
      * U  * x = y
     */
-    let (_rl,_ru) = lu(&_A);
+    let (_rl,_ru) = lu(&_a);
     let       _l  = _rl.unwrap();
     let       _u  = _ru.unwrap();
-    let mut   _y  = zero(1,_A.col);
+    let mut   _y  = zero(1,_a.col);
     //solve l  * y = b
-    for i in (0.._l.row) {
+    for i in 0.._l.row {
         _y.mat[i][0] = _b.mat[i][0];
-        for j in (0..i) {
+        for j in 0..i {
             _y.mat[i][0] += - 1.0 *  _y.mat[j][0] * _l.mat[i][j]
         }
         _y.mat[i][0] /= _l.mat[i][i];
     }
     //solve U * x = y
-    print_mat(&_u);
-    println!(" * x = ");
-    print_mat(&_y);
-    let mut _x = zero(1,_A.col);
+    let mut _x = zero(1,_a.col);
     for i in (0.._u.row).rev() {
         _x.mat[i][0] = _y.mat[i][0];
-        for j in (i+1.._u.row) {
+        for j in i + 1.._u.row {
             _x.mat[i][0] += - 1.0 *  _x.mat[j][0] * _u.mat[i][j]
         }
     }
@@ -501,7 +498,7 @@ mod mat_tests {
     
     #[test]
     fn line_eq_work(){
-        let _A = Matrix {
+        let _a = Matrix {
             mat: vec![vec![1.0,1.0,1.0],
                       vec![4.0,3.0,5.0],
                       vec![3.0,5.0,3.0]],
@@ -522,7 +519,7 @@ mod mat_tests {
             row: 1,
             col: 3
         };
-        matrix_test(&line_eq(&_A,&_b),&_x);
+        matrix_test(&line_eq(&_a,&_b),&_x);
     }
 
     #[test]
