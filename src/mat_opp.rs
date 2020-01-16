@@ -1,4 +1,5 @@
 use std::ops::{Add,Sub,Mul};
+use nearly_eq::*;
 
 #[derive(Debug,Clone)]
 pub struct Matrix {
@@ -487,7 +488,7 @@ pub fn line_eq(_a: &Matrix, _b: &Matrix) -> Matrix {
 
 //----------------------------ここからテストです---------------------------
 pub fn matrix_test(a: &Matrix,b: &Matrix) {
-    assert_eq!(a.mat,b.mat);
+    assert_nearly_eq!(a.mat,b.mat);
     assert_eq!(a.col,b.col);
     assert_eq!(a.row,b.row);
 }
