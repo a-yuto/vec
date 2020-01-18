@@ -492,7 +492,6 @@ pub fn matrix_test(a: &Matrix,b: &Matrix) {
     assert_eq!(a.col,b.col);
     assert_eq!(a.row,b.row);
 }
-
 #[cfg(test)]
 mod mat_tests {
     use super::*;
