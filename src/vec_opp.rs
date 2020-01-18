@@ -1,17 +1,42 @@
 use nearly_eq::*;
-pub fn add(a: &Vec<f64>,b: &Vec<f64>) -> Result<Vec<f64>,String>{
-    let mut c: Vec<f64> = Vec::new();
-    for i in 0..a.len() {
-        c.push(a[i] + b[i]);
-    }
-    let _can = a.len() == b.len(); 
-    let d:Result<Vec<f64>,String> = match _can {
-        true  => Ok(c), 
-        false => Err("計算不可能です".to_string()),
-    };
-    d
+
+trait VecOpp<T> {
+    fn add(a: &Vec<T>,b: &Vec<T>) -> Result<Vec<T>,String>;
 }
-    
+struct vec {
+}
+impl VecOpp<f64> for vec {
+    fn add(a: &Vec<f64>,b: &Vec<f64>) -> Result<Vec<f64>,String>{
+        let error = match a.len() > b.len() {
+            true  => "fist arg length is longer is than second.",
+            false => "second arg length is longet tham first.",
+        };
+        match a.len() == b.len() {
+            true  => Ok(
+                (0..a.len()).map(|i|
+                    a[i] + b[i]
+                ).collect()
+            ),
+            false => Err(error.to_string())
+        }
+    }
+}
+impl VecOpp<i64> for vec {
+    fn add(a: &Vec<i64>,b: &Vec<i64>) -> Result<Vec<i64>,String>{
+        let error = match a.len() > b.len() {
+            true  => "fist arg length is longer is than second.",
+            false => "second arg length is longet tham first.",
+        };
+        match a.len() == b.len() {
+            true  => Ok(
+                (0..a.len()).map(|i|
+                    a[i] + b[i]
+                ).collect()
+            ),
+            false => Err(error.to_string())
+        }
+    }
+}
 pub fn scl_mul(k: &f64,a: &Vec<f64>) -> Vec<f64> {
     let mut b: Vec<f64> = Vec::new();
     for i in a {
@@ -117,53 +142,63 @@ pub fn cor(x: &Vec<f64>,y: &Vec<f64>) -> f64{
 #[cfg(test)]
 mod vec_tests {
     use super::*;
+    use crate::vec_opp::*;
     #[test]
     fn add_works() {
-        let a = vec![1.0,2.0];
-        let b = vec![3.0,4.5];
-        let c = add(&a,&b).unwrap();
-        assert_eq!(vec![4.0,6.5],c);
+        let int_a = vec![1,2];
+        let int_b = vec![3,4];
+        let int_ans = vec::add(&int_a,&int_b).unwrap();
+        assert_eq!(vec![4,6],int_ans);
+        let float_a   = vec![1.0,2.0];
+        let float_b   = vec![3.0,4.5];
+        let float_ans = vec::add(&float_a,&float_b).unwrap();
+        assert_eq!(vec![4.0,6.5],float_ans);
     }
     #[test]
     fn scl_ml_works() {
-        let a = vec![1.0,2.0];
-        let b = 5.;
-        let c = scl_mul(&b,&a);
+        let int_a   = vec![3,4];
+        let int_b   = 6;
+        assert_eq!(vec![18,24],vec::scl_mul(int_b,&int_a));
+        let float_a   = vec![1.0,2.0];
+        let float_b   = 5.;
+        let float_ans = vec::scl_mul(&b,&a);
         assert_eq!(vec![5.0,10.0],c);
     }
     #[test]
     fn in_mul_works() {
-        let a = vec![1.0,2.0];
-        let b = vec![3.0,4.5];
-        let c = in_mul(&a,&b).unwrap();
-        let d = vec![1.0,0.0];
-        let e = vec![0.0,1.0];
-        let f = in_mul(&d,&e).unwrap();
-        assert_eq!(&(12.0 as f64),&c);
-        assert_eq!(&(0.0  as f64),&f);
+        let int_a = vec![3,2];
+        let int_b = vec![2,6];
+        assert_eq!(18,vec::in_mul(&int_a,&int_b).unwrap());
+        let flaot_a = vec![1.0,2.0];
+        let float_b = vec![3.0,4.5];
+        let float_c = vec![1.0,0.0];
+        let float_d = vec![0.0,1.0];
+        assert_eq!(12.0,vec::in_mul(&float_a,&float_b).unwrap());
+        assert_eq!( 0.0,vec::in_mul(&float_bc,float_d).unwrap());
     }
     #[test]
     fn out_mul_works() {
-        let a = vec![1.0,2.0];
-        let b = vec![3.0,4.5];
-        let c = out_mul(&a,&b).unwrap();
-        assert_eq!(&(-1.5 as f64),&c);
+        let int_a = vec![3,5];
+        let int_b = vec![2,4];
+        assert_eq!(-2,vec::out_mul(&int_a,&int_b).unwrap());
+        let float_a = vec![1.0,2.0];
+        let float_b = vec![3.0,4.5];
+        assert_eq!(-1.5,vec::out_mul(&a,&b).unwrap());
     }
     #[test]
     fn size_works() {
-        let a = vec![1.0,2.0];
-        let b = size(&a);
-        let c = (5.0 as f64).sqrt();
-        assert_eq!(c,b);
+        //めんどくさいから全部floatで返す？
+        assert_eq!(size(&vec![3,4]),5.0);
+        assert_eq!(size(&vec![1.0,2.0],(5.0 as f64).sqrt());
     }
 
     #[test]
     fn sin_bt_vec_works() {
-        let x = vec![1.0,(3.0 as f64).sqrt()];
-        let y = vec![1.0,0.0];
-        let s = sin_bt_vec(&y,&x).unwrap();
-        let z = (3.0 as f64).sqrt() / 2.0;
-        assert_nearly_eq!(&s,&z);
+        let float_x = vec![1.0,(3.0 as f64).sqrt()];
+        let float_y = vec![1.0,0.0];
+        let float_s = sin_bt_vec(&y,&x).unwrap();
+        let float_z = (3.0 as f64).sqrt() / 2.0;
+        assert_nearly_eq!(&float_s,&float_z);
     }
 
     #[test]
